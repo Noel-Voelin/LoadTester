@@ -2,65 +2,51 @@ import re
 import requests
 from datetime import datetime
 import time
+import glob
 import concurrent.futures
-import os
 
-parts = [
-    r'\[.*(\d{2}:\d{2}:\d{2}).*\].*(GET|POST)\ ?(\/.*)HTTP\/',  # host %h
-]
 FMT = '%H:%M:%S'
+host = 'https://www.ubs.com'
+magicRegex = r'\[.*(\d{2}:\d{2}:\d{2}).*\].*(GET|POST)\ ?(\/.*)HTTP\/'
 
 
-def get_timestamp(entry):
-    return datetime.strptime(entry[0], FMT)
+class LogEntry:
+    def __init__(self, time_stamp, method, path):
+        self.time_stamp = datetime.strptime(time_stamp, FMT)
+        self.method = method
+        self.path = path
 
-
-def get_method(entry):
-    return entry[1]
-
-
-def get_path(entry):
-    return entry[2]
-
-
-def make_user(access_list):
-    def send(entry):
-
+    def send(self):
         # Ternary condition
-        return requests.post(host + get_path(entry)).status_code if get_method(entry) == "post" else requests.get(
-            host + get_path(entry)).status_code
+        return 500 #requests.post(host + self.path).status_code if self.method == "post" else requests.get(host + self.path).status_code
 
-    host = 'https://www.ubs.com'
-    endTime = None
-    for entry in access_list:
-        response = 500
-        send(entry)
-        if endTime is not None:
-            timedelta = get_timestamp(entry) - datetime.strptime(endTime, FMT)
+
+def start_user_traffic(access_log_path):
+    end_time = None
+    for entry in parse_and_sort(access_log_path):
+        response = entry.send()
+        if end_time is not None:
+            timedelta = entry.time_stamp - end_time
             time.sleep(timedelta.total_seconds())
-        endTime = entry[0]
-        print(get_path(entry) + "CODE: " + str(response))
+        end_time = entry.time_stamp
+        print(entry.path + "CODE: " + str(response))
 
 
 def parse_and_sort(filepath):
-    executionArray = []
-    pattern = re.compile(parts[0])
-    #Context manager
+    execution_array = []
+    pattern = re.compile(magicRegex)
+    # Context manager
     with open(filepath) as fp:
         line = fp.readline()
         while line:
             path = pattern.search(line.strip())
             if path is not None:
-                pathEntry = ["{}".format(path.group(1)), "{}".format(path.group(2)), "{}".format(path.group(3))]
-                executionArray.append(pathEntry)
+                execution_array.append(LogEntry(path.group(1), path.group(2), path.group(3)))
             line = fp.readline()
-    executionArray.sort(key=get_timestamp)
-    return executionArray
+    execution_array.sort(key=lambda x: x.time_stamp)
+    return execution_array
 
 
 if __name__ == '__main__':
-    sorted_list_of_access_entries = parse_and_sort("access-log-1.log")
     with concurrent.futures.ProcessPoolExecutor() as executor:
-         [executor.submit(make_user, sorted_list_of_access_entries) for _ in range(os.cpu_count())]
-
-
+        [executor.submit(start_user_traffic, file) for file in glob.glob("accesslogs/*.log")]
