@@ -14,8 +14,8 @@ the Directory has to be called `accesslogs` and should be a sibeling of the scri
 ```
 ├── accesslogs
 │   └── access-log-1.log
-│   ├── access-log-2.log
-│   ├── access-log-3.log
-│   ├── ...
+│   └── access-log-2.log
+│   └── access-log-3.log
+│   └── ...
 └── LoadTest.py
 ```
