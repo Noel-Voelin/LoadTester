@@ -18,7 +18,7 @@ class LogEntry:
 
     def send(self):
         # Ternary condition
-        return 500 #requests.post(host + self.path).status_code if self.method == "post" else requests.get(host + self.path).status_code
+        return requests.post(host + self.path).status_code if self.method == "post" else requests.get(host + self.path).status_code
 
 
 def start_user_traffic(access_log_path):
