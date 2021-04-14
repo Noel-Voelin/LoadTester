@@ -1,6 +1,6 @@
 # LoadTest.py
 
-LoadTest.py is a Python tool for simulating end-user traffic by replaying AEM access logs
+LoadTest.py is a Python tool for simulating end-user traffic by replaying access logs. Its a first draft. Might have to be tweeked to work for a given usecase
 
 ## Installation
 
