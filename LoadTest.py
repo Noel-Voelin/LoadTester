@@ -6,7 +6,7 @@ import glob
 import concurrent.futures
 
 FMT = '%H:%M:%S'
-host = 'https://www.ubs.com'
+host = 'https://<hostname>'
 magicRegex = r'\[.*(\d{2}:\d{2}:\d{2}).*\].*(GET|POST)\ ?(\/.*)HTTP\/'
 
 
